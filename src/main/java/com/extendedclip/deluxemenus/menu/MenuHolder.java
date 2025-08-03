@@ -2,6 +2,7 @@ package com.extendedclip.deluxemenus.menu;
 
 import com.extendedclip.deluxemenus.DeluxeMenus;
 import com.extendedclip.deluxemenus.menu.options.MenuOptions;
+import com.extendedclip.deluxemenus.utils.AdventureUtils;
 import com.extendedclip.deluxemenus.utils.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -298,11 +299,11 @@ public class MenuHolder implements InventoryHolder {
                         ItemMeta meta = i.getItemMeta();
 
                         if (item.options().displayNameHasPlaceholders() && item.options().displayName().isPresent()) {
-                            meta.setDisplayName(StringUtils.color(setPlaceholdersAndArguments(item.options().displayName().get())));
+                            meta.displayName(AdventureUtils.parseMiniMessage(setPlaceholdersAndArguments(item.options().displayName().get())));
                         }
 
                         if (item.options().loreHasPlaceholders()) {
-                            meta.setLore(item.getMenuItemLore(getHolder(), item.options().lore()));
+                            meta.lore(item.getMenuItemLoreComponents(getHolder(), item.options().lore()));
                         }
 
                         i.setItemMeta(meta);

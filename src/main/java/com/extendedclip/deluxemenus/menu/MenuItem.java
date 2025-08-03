@@ -7,11 +7,13 @@ import com.extendedclip.deluxemenus.menu.options.LoreAppendMode;
 import com.extendedclip.deluxemenus.menu.options.MenuItemOptions;
 import com.extendedclip.deluxemenus.menu.options.CustomModelDataComponent;
 import com.extendedclip.deluxemenus.nbt.NbtProvider;
+import com.extendedclip.deluxemenus.utils.AdventureUtils;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
 import com.extendedclip.deluxemenus.utils.ItemUtils;
 import com.extendedclip.deluxemenus.utils.StringUtils;
 import com.extendedclip.deluxemenus.utils.VersionHelper;
 import com.google.common.collect.ImmutableMultimap;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
@@ -270,13 +272,13 @@ public class MenuItem {
 
         if (this.options.displayName().isPresent()) {
             final String displayName = holder.setPlaceholdersAndArguments(this.options.displayName().get());
-            itemMeta.setDisplayName(StringUtils.color(displayName));
+            itemMeta.displayName(AdventureUtils.parseMiniMessage(displayName));
         }
 
-        List<String> lore = new ArrayList<>();
+        List<Component> lore = new ArrayList<>();
         // This checks if a lore should be kept from the hooked item, and then if a lore exists on the item
-        // ItemMeta.getLore is nullable. In that case, we just create a new ArrayList so we don't add stuff to a null list.
-        List<String> itemLore = Objects.requireNonNullElse(itemMeta.getLore(), new ArrayList<>());
+        // ItemMeta.lore is nullable. In that case, we just create a new ArrayList so we don't add stuff to a null list.
+        List<Component> itemLore = Objects.requireNonNullElse(itemMeta.lore(), new ArrayList<>());
         // Ensures backwards compatibility with how hooked items are currently handled
         LoreAppendMode mode = this.options.loreAppendMode().orElse(LoreAppendMode.OVERRIDE);
         if (!this.options.hasLore() && this.options.loreAppendMode().isEmpty()) mode = LoreAppendMode.IGNORE;
@@ -285,19 +287,19 @@ public class MenuItem {
                 lore.addAll(itemLore);
                 break;
             case TOP: // DM lore is added at the top
-                lore.addAll(getMenuItemLore(holder, this.options.lore()));
+                lore.addAll(getMenuItemLoreComponents(holder, this.options.lore()));
                 lore.addAll(itemLore);
                 break;
             case BOTTOM: // DM lore is bottom at the bottom
                 lore.addAll(itemLore);
-                lore.addAll(getMenuItemLore(holder, this.options.lore()));
+                lore.addAll(getMenuItemLoreComponents(holder, this.options.lore()));
                 break;
             case OVERRIDE: // Lore from DM overrides the lore from the item
-                lore.addAll(getMenuItemLore(holder, this.options.lore()));
+                lore.addAll(getMenuItemLoreComponents(holder, this.options.lore()));
                 break;
         }
 
-        itemMeta.setLore(lore);
+        itemMeta.lore(lore);
 
         if (this.options.unbreakable()) {
             itemMeta.setUnbreakable(true);
@@ -341,8 +343,8 @@ public class MenuItem {
             final Optional<String> trimPatternName = this.options.trimPattern();
 
             if (trimMaterialName.isPresent() && trimPatternName.isPresent()) {
-                final TrimMaterial trimMaterial = Registry.TRIM_MATERIAL.match(holder.setPlaceholdersAndArguments(trimMaterialName.get()));
-                final TrimPattern trimPattern = Registry.TRIM_PATTERN.match(holder.setPlaceholdersAndArguments(trimPatternName.get()));
+                final TrimMaterial trimMaterial = Registry.TRIM_MATERIAL.get(NamespacedKey.fromString(holder.setPlaceholdersAndArguments(trimMaterialName.get())));
+                final TrimPattern trimPattern = Registry.TRIM_PATTERN.get(NamespacedKey.fromString(holder.setPlaceholdersAndArguments(trimPatternName.get())));
 
                 if (trimMaterial != null && trimPattern != null) {
                     final ArmorTrim armorTrim = new ArmorTrim(trimMaterial, trimPattern);
@@ -417,7 +419,7 @@ public class MenuItem {
                     plugin.debug(
                             DebugLevel.HIGHEST,
                             Level.INFO,
-                            "Failed to add enchantment " + entry.getKey().getName() + " to item " + itemStack.getType()
+                            "Failed to add enchantment " + entry.getKey().getKey() + " to item " + itemStack.getType()
                     );
                 }
             }
@@ -576,6 +578,17 @@ public class MenuItem {
                 .flatMap(Arrays::stream)
                 .map(line -> line.split("\\\\n"))
                 .flatMap(Arrays::stream)
+                .collect(Collectors.toList());
+    }
+
+    protected List<Component> getMenuItemLoreComponents(@NotNull final MenuHolder holder, @NotNull final List<String> lore) {
+        return lore.stream()
+                .map(holder::setPlaceholdersAndArguments)
+                .map(line -> line.split("\n"))
+                .flatMap(Arrays::stream)
+                .map(line -> line.split("\\\\n"))
+                .flatMap(Arrays::stream)
+                .map(AdventureUtils::parseMiniMessage)
                 .collect(Collectors.toList());
     }
 

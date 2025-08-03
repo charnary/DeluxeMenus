@@ -15,6 +15,9 @@ public class StringUtils {
 
     private final static Pattern HEX_PATTERN = Pattern
             .compile("&(#[a-f0-9]{6})", Pattern.CASE_INSENSITIVE);
+    
+    private final static Pattern MINIMESSAGE_HEX_PATTERN = Pattern
+            .compile("&#([a-f0-9]{6})", Pattern.CASE_INSENSITIVE);
 
     /**
      * Translates the ampersand color codes like '&7' to their section symbol counterparts like '§7'.
@@ -73,6 +76,56 @@ public class StringUtils {
         }
 
         return input;
+    }
+
+    /**
+     * Converts legacy hex format (&#XXXXXX) to MiniMessage hex format (<#XXXXXX>).
+     * This should be called before MiniMessage parsing to ensure proper color translation.
+     *
+     * @param input The string in which to convert hex colors.
+     * @return The string with hex colors converted to MiniMessage format.
+     */
+    @NotNull
+    public static String convertHexToMiniMessage(@NotNull String input) {
+        Matcher m = MINIMESSAGE_HEX_PATTERN.matcher(input);
+        while (m.find()) {
+            input = input.replace(m.group(), "<#" + m.group(1) + ">");
+        }
+        return input;
+    }
+
+    /**
+     * Converts legacy color codes (&a, &f, etc.) to MiniMessage format (<green>, <white>, etc.).
+     * This should be called before MiniMessage parsing to ensure proper color translation.
+     *
+     * @param input The string in which to convert legacy colors.
+     * @return The string with legacy colors converted to MiniMessage format.
+     */
+    @NotNull
+    public static String convertLegacyToMiniMessage(@NotNull String input) {
+        return input
+                .replace("&0", "<black>")
+                .replace("&1", "<dark_blue>")
+                .replace("&2", "<dark_green>")
+                .replace("&3", "<dark_aqua>")
+                .replace("&4", "<dark_red>")
+                .replace("&5", "<dark_purple>")
+                .replace("&6", "<gold>")
+                .replace("&7", "<gray>")
+                .replace("&8", "<dark_gray>")
+                .replace("&9", "<blue>")
+                .replace("&a", "<green>")
+                .replace("&b", "<aqua>")
+                .replace("&c", "<red>")
+                .replace("&d", "<light_purple>")
+                .replace("&e", "<yellow>")
+                .replace("&f", "<white>")
+                .replace("&k", "<obfuscated>")
+                .replace("&l", "<bold>")
+                .replace("&m", "<strikethrough>")
+                .replace("&n", "<underlined>")
+                .replace("&o", "<italic>")
+                .replace("&r", "<reset>");
     }
 
     @Nullable

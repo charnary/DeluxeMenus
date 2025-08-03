@@ -120,11 +120,11 @@ public class ClickActionTask extends BukkitRunnable {
                 break;
 
             case MINI_MESSAGE:
-                plugin.audiences().player(player).sendMessage(MiniMessage.miniMessage().deserialize(executable));
+                player.sendMessage(MiniMessage.miniMessage().deserialize(executable));
                 break;
 
             case MINI_BROADCAST:
-                plugin.audiences().all().sendMessage(MiniMessage.miniMessage().deserialize(executable));
+                Bukkit.broadcast(MiniMessage.miniMessage().deserialize(executable));
                 break;
 
             case MESSAGE:
@@ -281,7 +281,7 @@ public class ClickActionTask extends BukkitRunnable {
 
             case JSON_BROADCAST:
             case BROADCAST_JSON:
-                plugin.audiences().all().sendMessage(AdventureUtils.fromJson(executable));
+                Bukkit.broadcast(AdventureUtils.fromJson(executable));
                 break;
 
             case REFRESH:
